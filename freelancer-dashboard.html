@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancer Dashboard - Nexus</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .gig-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .gig-card {
+            background: var(--bg);
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .gig-card:hover {
+            border-color: var(--primary);
+        }
+        .work-summary {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .work-stat {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 6px;
+        }
+        .work-stat .number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .work-stat .label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 12px;
+        }
+        .kanban-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            overflow-x: auto;
+            min-height: 400px;
+        }
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .section-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .card-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+        .new-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background: rgba(250, 204, 21, 0.18);
+            color: #facc15;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            vertical-align: middle;
+        }
+        .applied-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.16);
+            color: var(--success);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .job-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .job-card-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .job-card-main {
+            flex: 1;
+            min-width: 220px;
+        }
+        .job-card-side {
+            text-align: right;
+            min-width: 150px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        .job-description {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .job-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .job-actions button {
+            padding: 8px 14px;
+            font-size: 0.8rem;
+        }
+        .meta-line {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-top: 4px;
+        }
+        @media (max-width: 600px) {
+            .job-card-side {
+                text-align: left;
+                align-items: flex-start;
+            }
+            .job-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>Nexus Freelancer Dashboard</h1>
+        <div>
+            <span id="userName" style="margin-right: 20px; color: var(--text);"></span>
+            <button onclick="window.location.href='chat.html'" style="margin-right: 10px;">💬 Messages</button>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+
+        <!-- Profile + Availability -->
+        <div style="display: grid; grid-template-columns: 1fr 3fr; gap: 20px; margin-bottom: 30px;">
+            <div class="card">
+                <h3>My Profile</h3>
+                <p style="font-size: 0.75rem; color: var(--success); margin-bottom: 10px;">*Click text to edit</p>
+                <p id="profileName" style="color: var(--text); font-size: 1.2rem; font-weight: bold;" contenteditable="true"></p>
+                <p id="profileRole" style="color: var(--primary); font-size: 0.9rem; margin-bottom: 5px;" contenteditable="true"></p>
+                <p id="profileExp" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;" contenteditable="true"></p>
+                <div id="profileSkills"></div>
+                <div class="status-toggle">
+                    <label class="switch">
+                        <input type="checkbox" id="statusSwitch" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span id="statusText" style="color: var(--success); font-weight: bold;">Available for Hire</span>
+                </div>
+            </div>
+
+            <!-- Overview Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 20px;">
+                <div class="card" style="text-align: center;">
+                    <h3 id="totalGigs" style="font-size: 2.5rem; color: var(--primary);">0</h3>
+                    <p style="color: var(--text-muted);">Active Gigs</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 id="totalApplications" style="font-size: 2.5rem; color: #facc15;">0</h3>
+                    <p style="color: var(--text-muted);">Applications</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 id="totalTasks" style="font-size: 2.5rem; color: var(--primary);">0</h3>
+                    <p style="color: var(--text-muted);">Total Tasks</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 id="completedTasks" style="font-size: 2.5rem; color: var(--success);">0</h3>
+                    <p style="color: var(--text-muted);">Completed</p>
+                </div>
+                <div class="card" style="text-align: center;">
+                    <h3 id="inProgressTasks" style="font-size: 2.5rem; color: #60a5fa;">0</h3>
+                    <p style="color: var(--text-muted);">In Progress</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Active Gigs -->
+        <div class="card" style="margin-bottom: 30px;">
+            <h3>My Active Gigs</h3>
+            <p style="color: var(--text-muted); margin-bottom: 10px;">Manage your tasks and chat with the creator. Use <strong>Leave</strong> to exit a gig.</p>
+            <div id="activeGigs" class="gig-cards">
+                <p style="color: var(--text-muted);">No active gigs yet. Apply to jobs below!</p>
+            </div>
+        </div>
+
+        <!-- Pending Hire Offers -->
+        <div class="card" style="margin-bottom: 30px; border-color: rgba(250,204,21,0.4);">
+            <div class="section-heading">
+                <div>
+                    <h3 style="color: #facc15;">&#x23F3; Pending Hire Offers</h3>
+                    <p style="color: var(--text-muted);">Creators who want to hire you. Accept to start working, or decline.</p>
+                </div>
+                <button class="secondary" onclick="loadPendingOffers()">Refresh</button>
+            </div>
+            <div id="pendingOffers" class="gig-cards">
+                <p style="color: var(--text-muted);">No pending hire offers right now.</p>
+            </div>
+        </div>
+
+        <!-- Creators on Nexus -->
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="section-heading">
+                <div>
+                    <h3>Creators on Nexus</h3>
+                    <p>Every creator is listed here, including new signups. Start a conversation anytime.</p>
+                </div>
+                <button class="secondary" onclick="loadCreators()">Refresh</button>
+            </div>
+            <div id="creatorsList" class="gig-cards">
+                <p style="color: var(--text-muted);">Loading creators...</p>
+            </div>
+        </div>
+
+        <!-- Available Jobs -->
+        <div class="card">
+            <div class="section-heading">
+                <div>
+                    <h3>Open Creator Hirings</h3>
+                    <p>All open jobs from creators. Apply once, then message the creator directly.</p>
+                </div>
+                <div class="section-actions">
+                    <select id="sortJobs">
+                        <option value="match">Sort by: Best Match</option>
+                        <option value="budget">Sort by: Highest Budget</option>
+                    </select>
+                    <button class="secondary" onclick="fetchJobs()">Refresh</button>
+                </div>
+            </div>
+            <div id="jobFeed" class="job-feed"></div>
+        </div>
+    </div>
+
+    <!-- Kanban Board Modal -->
+    <div id="kanbanModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 id="modalGigTitle" style="color: var(--primary);"></h2>
+                    <p id="modalCreatorName" style="color: var(--text-muted); margin-top: 5px;"></p>
+                </div>
+                <button class="secondary" onclick="closeKanban()">Close</button>
+            </div>
+
+            <div class="kanban-container">
+                <div class="k-column" id="modal-todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: #facc15;">To Do</h4>
+                </div>
+                <div class="k-column" id="modal-inprogress" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: #60a5fa;">In Progress</h4>
+                </div>
+                <div class="k-column" id="modal-done" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: var(--success);">Done</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script src="js/freelancer-dashboard.js"></script>
+</body>
+</html>

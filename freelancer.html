@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancer Hub - Nexus</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+        <h1>Nexus Freelancer Hub</h1>
+        <button class="secondary" onclick="window.location.href='index.html'">Logout</button>
+    </nav>
+
+    <div class="dashboard-grid two-col">
+        <div class="card">
+            <h3>My Profile</h3>
+            <p style="font-size: 0.75rem; color: var(--success); margin-bottom: 10px;">*Click text below to edit live</p>
+
+            <p id="profileName" style="color: var(--text); font-size: 1.2rem; font-weight: bold;" contenteditable="true">Pratik</p>
+            <p id="profileRole" style="color: var(--primary); font-size: 0.9rem; margin-bottom: 5px;" contenteditable="true">Video Editor & Thumbnail Designer</p>
+            <p id="profileExp" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;" contenteditable="true">Experience: 2 Years</p>
+
+            <div>
+                <span class="skill-tag">Premiere Pro</span>
+                <span class="skill-tag">Photoshop</span>
+                <span class="skill-tag">CTR Optimization</span>
+            </div>
+
+            <div class="status-toggle">
+                <label class="switch">
+                    <input type="checkbox" id="statusSwitch" checked>
+                    <span class="slider"></span>
+                </label>
+                <span id="statusText" style="color: var(--success); font-weight: bold;">Available for Hire</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Recommended Gigs</h3>
+                <select id="sortJobs">
+                    <option value="match">Sort by: Best Match</option>
+                    <option value="budget">Sort by: Highest Budget</option>
+                </select>
+            </div>
+
+            <div id="jobFeed" class="job-feed"></div>
+        </div>
+    </div>
+
+    <script src="js/freelancer.js"></script>
+</body>
+</html>

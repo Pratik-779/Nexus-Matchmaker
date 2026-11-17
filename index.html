@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Matchmaker</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <h1 style="font-size: 3rem; color: var(--primary);">Nexus Matchmaker</h1>
+        <p style="font-size: 1.2rem; max-width: 600px; margin-top: 15px;">Algorithmically connecting Content Creators with 50+ specialized freelancers.</p>
+
+        <div class="role-buttons">
+            <button onclick="showAuth('creator', 'login')" style="padding: 15px 30px; font-size: 1.1rem;">Login as Creator</button>
+            <button class="secondary" onclick="showAuth('freelancer', 'login')" style="padding: 15px 30px; font-size: 1.1rem;">Login as Freelancer</button>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <p style="color: var(--text-muted);">Don't have an account?</p>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 10px;">
+                <button onclick="showAuth('creator', 'signup')" style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px;">Sign Up as Creator</button>
+                <button onclick="showAuth('freelancer', 'signup')" style="background: transparent; border: 1px solid var(--primary); color: var(--primary); padding: 10px 20px;">Sign Up as Freelancer</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: var(--surface); border-radius: 12px; max-width: 600px;">
+            <h3 style="color: var(--text); margin-bottom: 15px;">✨ Features</h3>
+            <ul style="text-align: left; color: var(--text-muted); line-height: 2;">
+                <li>🤖 AI-Powered Matching (Google Gemini API)</li>
+                <li>💬 Creator ↔ Freelancer Chat after applying or hiring</li>
+                <li>🔄 Real-Time Kanban Board (Socket.io)</li>
+                <li>📢 Open Creator Hirings visible to every freelancer</li>
+                <li>⚡ O(1) Hash Table Lookups</li>
+                <li>🔗 Bipartite Graph Architecture</li>
+            </ul>
+        </div>
+
+        <div id="serverStatus" style="margin-top: 18px; font-size: 0.9rem; color: var(--success);">Checking server...</div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; overflow-y: auto; padding: 20px;">
+        <div class="card" style="max-width: 500px; width: 90%; margin: 20px auto;">
+            <h3 id="authTitle" style="margin-bottom: 20px;">Login</h3>
+
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter username" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" style="display: none;">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Full Name *</label>
+                    <input type="text" id="signupName" placeholder="John Doe" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Email *</label>
+                    <input type="email" id="signupEmail" placeholder="john@example.com" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Username *</label>
+                    <input type="text" id="signupUsername" placeholder="johndoe" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; color: var(--text);">Password *</label>
+                    <input type="password" id="signupPassword" placeholder="Minimum 6 characters" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                </div>
+
+                <!-- Freelancer specific fields -->
+                <div id="freelancerFields" style="display: none;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Role/Specialization *</label>
+                        <input type="text" id="signupRole" placeholder="e.g., Video Editor, Graphic Designer" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Experience *</label>
+                        <input type="text" id="signupExperience" placeholder="e.g., 3 Years" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Skills (comma separated) *</label>
+                        <input type="text" id="signupSkills" placeholder="Premiere Pro, Photoshop, After Effects" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Hourly Rate ($)</label>
+                        <input type="number" id="signupHourlyRate" placeholder="50" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Bio</label>
+                        <textarea id="signupBio" placeholder="Brief description of your expertise..." style="width: 100%; height: 80px; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text); resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <!-- Creator specific fields -->
+                <div id="creatorFields" style="display: none;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Channel/Brand Name</label>
+                        <input type="text" id="signupChannelName" placeholder="Your Channel Name" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: var(--text);">Content Type</label>
+                        <input type="text" id="signupContentType" placeholder="YouTube, Podcast, Blog, etc." style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+                    </div>
+                </div>
+            </div>
+
+            <div id="authError" style="display: none; color: #ef4444; margin-bottom: 15px; font-size: 0.9rem;"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button id="authSubmitBtn" onclick="handleAuth()" style="flex: 1;">Submit</button>
+                <button class="secondary" onclick="closeAuth()" style="flex: 1;">Cancel</button>
+            </div>
+
+            <div id="loginHint" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #334155; font-size: 0.85rem; color: var(--text-muted);">
+                <p><strong>Demo Credentials:</strong></p>
+                <p>Creator: admin / password</p>
+                <p>Freelancer: pratik / password</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUserType = '';
+        let currentAuthMode = 'login';
+
+        async function checkServer() {
+            const statusEl = document.getElementById('serverStatus');
+            if (!statusEl) return;
+
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                const data = await response.json();
+                statusEl.innerHTML =
+                    `🟢 Online - ${data.stats.freelancers} freelancers, ${data.stats.creators} creators, ${data.stats.jobs} open jobs`;
+                statusEl.style.color = 'var(--success)';
+            } catch (error) {
+                statusEl.innerHTML = '🔴 Offline - start the backend with npm start';
+                statusEl.style.color = '#ef4444';
+            }
+        }
+
+        function showAuth(userType, mode) {
+            currentUserType = userType;
+            currentAuthMode = mode;
+
+            const isLogin = mode === 'login';
+
+            document.getElementById('authTitle').textContent =
+                isLogin ? `${userType === 'creator' ? 'Creator' : 'Freelancer'} Login` :
+                         `Sign Up as ${userType === 'creator' ? 'Creator' : 'Freelancer'}`;
+
+            document.getElementById('loginForm').style.display = isLogin ? 'block' : 'none';
+            document.getElementById('signupForm').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('loginHint').style.display = isLogin ? 'block' : 'none';
+
+            if (!isLogin) {
+                document.getElementById('freelancerFields').style.display = userType === 'freelancer' ? 'block' : 'none';
+                document.getElementById('creatorFields').style.display = userType === 'creator' ? 'block' : 'none';
+            }
+
+            document.getElementById('authSubmitBtn').textContent = isLogin ? 'Login' : 'Sign Up';
+            document.getElementById('authModal').style.display = 'flex';
+            document.getElementById('authError').style.display = 'none';
+
+            if (isLogin) {
+                document.getElementById('loginUsername').focus();
+            } else {
+                document.getElementById('signupName').focus();
+            }
+        }
+
+        function closeAuth() {
+            document.getElementById('authModal').style.display = 'none';
+            // Clear forms
+            document.querySelectorAll('input, textarea').forEach(input => input.value = '');
+        }
+
+        async function handleAuth() {
+            if (currentAuthMode === 'login') {
+                await handleLogin();
+            } else {
+                await handleSignup();
+            }
+        }
+
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const errorDiv = document.getElementById('authError');
+
+            if (!username || !password) {
+                errorDiv.textContent = 'Please enter both username and password';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password, userType: currentUserType })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('nexus_user', JSON.stringify(data.user));
+                    localStorage.setItem('nexus_token', data.token);
+
+                    if (currentUserType === 'creator') {
+                        window.location.href = 'creator-dashboard.html';
+                    } else {
+                        window.location.href = 'freelancer-dashboard.html';
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Invalid credentials';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Server error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        async function handleSignup() {
+            const errorDiv = document.getElementById('authError');
+
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const username = document.getElementById('signupUsername').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+
+            if (!name || !email || !username || !password) {
+                errorDiv.textContent = 'Please fill in all required fields';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                errorDiv.textContent = 'Password must be at least 6 characters';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Gmail-only email validation
+            if (!email.toLowerCase().endsWith('@gmail.com')) {
+                errorDiv.textContent = 'Only @gmail.com email addresses are accepted';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            const userData = {
+                name,
+                email,
+                username,
+                password,
+                userType: currentUserType
+            };
+
+            if (currentUserType === 'freelancer') {
+                const role = document.getElementById('signupRole').value.trim();
+                const experience = document.getElementById('signupExperience').value.trim();
+                const skills = document.getElementById('signupSkills').value.trim();
+
+                if (!role || !experience || !skills) {
+                    errorDiv.textContent = 'Please fill in role, experience, and skills';
+                    errorDiv.style.display = 'block';
+                    return;
+                }
+
+                userData.role = role;
+                userData.experience = experience;
+                userData.skills = skills.split(',').map(s => s.trim());
+                userData.hourlyRate = parseInt(document.getElementById('signupHourlyRate').value) || 50;
+                userData.bio = document.getElementById('signupBio').value.trim();
+                userData.isAvailable = true;
+                userData.rating = 0;
+                userData.completedProjects = 0;
+            } else {
+                userData.channelName = document.getElementById('signupChannelName').value.trim();
+                userData.contentType = document.getElementById('signupContentType').value.trim();
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('✅ Account created successfully! Your profile is now visible to the other portal. Please login.');
+                    closeAuth();
+                    showAuth(currentUserType, 'login');
+                    document.getElementById('loginUsername').value = username;
+                    document.getElementById('loginPassword').focus();
+                } else {
+                    errorDiv.textContent = data.error || 'Signup failed';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Server error. Please try again.';
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Allow Enter key
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('authModal').style.display === 'flex') {
+                handleAuth();
+            }
+        });
+
+        checkServer();
+        setInterval(checkServer, 5000);
+    </script>
+</body>
+</html>

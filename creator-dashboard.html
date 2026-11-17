@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creator Dashboard - Nexus</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .hired-freelancers {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .freelancer-card {
+            background: var(--bg);
+            border: 1px solid #334155;
+            padding: 20px;
+            border-radius: 8px;
+            transition: border-color 0.2s;
+        }
+        .freelancer-card:hover {
+            border-color: var(--primary);
+        }
+        .work-summary {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .work-stat {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            background: rgba(139, 92, 246, 0.1);
+            border-radius: 6px;
+        }
+        .work-stat .number {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .work-stat .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        .modal-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 12px;
+        }
+        .kanban-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            overflow-x: auto;
+            min-height: 400px;
+        }
+        .add-task-btn {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: 2px dashed #334155;
+            color: var(--text-muted);
+            margin-top: 10px;
+        }
+        .add-task-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .action-buttons button {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.85rem;
+        }
+        .section-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 5px;
+        }
+        .section-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            min-width: 230px;
+            padding: 10px 12px;
+            background: var(--bg);
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: var(--text);
+            outline: none;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .card-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 0.8rem;
+        }
+        .new-badge {
+            display: inline-block;
+            margin-left: 6px;
+            padding: 2px 7px;
+            border-radius: 20px;
+            background: rgba(250, 204, 21, 0.18);
+            color: #facc15;
+            font-size: 0.62rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            vertical-align: middle;
+        }
+        .applied-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.16);
+            color: var(--success);
+            font-size: 0.72rem;
+            font-weight: 700;
+        }
+        .meta-line {
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            margin-top: 4px;
+        }
+        @media (max-width: 700px) {
+            .search-input {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>🎬 Creator Dashboard</h1>
+        <div>
+            <span id="userName" style="margin-right: 20px; color: var(--text);"></span>
+            <button onclick="window.location.href='chat.html'" style="margin-right: 10px;">💬 Messages</button>
+            <button class="secondary" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+
+        <!-- Overview Stats -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div class="card" style="text-align: center;">
+                <h3 id="totalHired" style="font-size: 2.5rem; color: var(--primary);">0</h3>
+                <p style="color: var(--text-muted);">Hired Freelancers</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 id="totalTasks" style="font-size: 2.5rem; color: var(--primary);">0</h3>
+                <p style="color: var(--text-muted);">Total Tasks</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 id="completedTasks" style="font-size: 2.5rem; color: var(--success);">0</h3>
+                <p style="color: var(--text-muted);">Completed</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 id="inProgressTasks" style="font-size: 2.5rem; color: #60a5fa;">0</h3>
+                <p style="color: var(--text-muted);">In Progress</p>
+            </div>
+            <div class="card" style="text-align: center;">
+                <h3 id="totalApplications" style="font-size: 2.5rem; color: #facc15;">0</h3>
+                <p style="color: var(--text-muted);">Applications</p>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+            <button onclick="window.location.href='creator.html'" style="padding: 20px; font-size: 1.1rem;">
+                🔍 Find Freelancers
+            </button>
+            <button onclick="showJobPostModal()" style="padding: 20px; font-size: 1.1rem;">
+                📢 Post Job Opportunity
+            </button>
+        </div>
+
+        <!-- Hired Freelancers -->
+        <div class="card">
+            <h3>My Hired Freelancers</h3>
+            <p style="color: var(--text-muted); margin-bottom: 10px;">Manage your team, assign tasks and chat with them</p>
+            <div id="hiredFreelancers" class="hired-freelancers">
+                <p style="color: var(--text-muted); grid-column: 1 / -1;">No freelancers hired yet. Find and hire freelancers to get started!</p>
+            </div>
+        </div>
+
+        <!-- Applications to my jobs -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="section-heading">
+                <div>
+                    <h3>Applications to Your Jobs</h3>
+                    <p>Freelancers who applied to your open hirings. Hire them or start a conversation.</p>
+                </div>
+                <button class="secondary" onclick="loadApplications()">Refresh</button>
+            </div>
+            <div id="applicationsList" class="hired-freelancers">
+                <p style="color: var(--text-muted); grid-column: 1 / -1;">No applications yet. Post a job so freelancers can apply.</p>
+            </div>
+        </div>
+
+        <!-- All freelancers on the platform -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="section-heading">
+                <div>
+                    <h3>Freelancers on Nexus</h3>
+                    <p>Every freelancer is listed here, including new signups.</p>
+                </div>
+                <div class="section-actions">
+                    <input id="freelancerSearch" class="search-input" type="text" placeholder="Search name, role or skill..." oninput="filterFreelancers()">
+                    <button class="secondary" onclick="loadAllFreelancers()">Refresh</button>
+                </div>
+            </div>
+            <div id="allFreelancers" class="hired-freelancers">
+                <p style="color: var(--text-muted); grid-column: 1 / -1;">Loading freelancers...</p>
+            </div>
+        </div>
+
+        <!-- My job postings -->
+        <div class="card" style="margin-top: 30px;">
+            <div class="section-heading">
+                <div>
+                    <h3>My Job Postings</h3>
+                    <p>Open roles you have published to the freelancer portal.</p>
+                </div>
+                <button class="secondary" onclick="loadMyJobs()">Refresh</button>
+            </div>
+            <div id="myJobs" class="hired-freelancers">
+                <p style="color: var(--text-muted); grid-column: 1 / -1;">No jobs posted yet.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Post Modal -->
+    <div id="jobPostModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="margin-bottom: 20px;">Post a Job Opportunity</h2>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text);">Job Title *</label>
+                <input type="text" id="jobTitle" placeholder="e.g., Video Editor for YouTube Channel" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text);">Description *</label>
+                <textarea id="jobDescription" placeholder="Describe what you need..." style="width: 100%; height: 100px; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text); resize: vertical;"></textarea>
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text);">Budget ($)</label>
+                <input type="number" id="jobBudget" placeholder="500" min="1" step="1" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; color: var(--text);">Required Skills (comma separated)</label>
+                <input type="text" id="jobSkills" placeholder="Video Editing, Thumbnail Design" style="width: 100%; padding: 10px; background: var(--bg); border: 1px solid #334155; border-radius: 8px; color: var(--text);">
+            </div>
+
+            <div id="jobPostError" style="display: none; color: #ef4444; margin-bottom: 15px;"></div>
+
+            <div style="display: flex; gap: 10px;">
+                <button onclick="postJob()" style="flex: 1;">Post Job</button>
+                <button class="secondary" onclick="closeJobPostModal()" style="flex: 1;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanban Board Modal -->
+    <div id="kanbanModal" class="modal">
+        <div class="modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 id="modalFreelancerName" style="color: var(--primary);"></h2>
+                    <p id="modalFreelancerRole" style="color: var(--text-muted); margin-top: 5px;"></p>
+                </div>
+                <button class="secondary" onclick="closeKanban()">Close</button>
+            </div>
+
+            <div class="kanban-container">
+                <div class="k-column" id="modal-todo" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: #facc15;">📋 To Do</h4>
+                    <button class="add-task-btn" onclick="addTask('todo')">+ Add Task</button>
+                </div>
+                <div class="k-column" id="modal-inprogress" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: #60a5fa;">⚡ In Progress</h4>
+                </div>
+                <div class="k-column" id="modal-done" ondragover="allowDrop(event)" ondrop="drop(event)">
+                    <h4 style="margin-bottom: 15px; color: var(--success);">✅ Done</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script>
+    <script src="js/creator-dashboard.js"></script>
+</body>
+</html>
